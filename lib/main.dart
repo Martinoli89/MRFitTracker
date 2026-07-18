@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'screens/dashboard_screen.dart';
+
 import 'core/theme/app_theme.dart';
-import 'screens/workout_screen.dart';
+import 'screens/dashboard_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/stats_screen.dart';
+import 'screens/workout_loop_screen.dart';
+import 'widgets/app_bottom_navigation.dart';
 
 void main() {
   runApp(const FitTracerApp());
@@ -33,48 +35,84 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int selectedIndex = 0;
 
-  final screens = const [
-    DashboardScreen(),
-    WorkoutScreen(),
-    HistoryScreen(),
-    StatsScreen(),
-  ];
+  late final List<Widget> screens;
+
+  @override
+  void initState() {
+    super.initState();
+
+    screens = [
+      DashboardScreen(
+        onStartWorkout: _openWorkout,
+      ),
+      const HistoryScreen(),
+      const StatsScreen(),
+    ];
+  }
+
+  Future<void> _openWorkout() async {
+    await Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        pageBuilder: (
+          context,
+          animation,
+          secondaryAnimation,
+        ) {
+          return const WorkoutLoopScreen();
+        },
+        transitionDuration: const Duration(milliseconds: 420),
+        reverseTransitionDuration:
+            const Duration(milliseconds: 280),
+        transitionsBuilder: (
+          context,
+          animation,
+          secondaryAnimation,
+          child,
+        ) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+
+          final slideAnimation = Tween<Offset>(
+            begin: const Offset(0, 0.035),
+            end: Offset.zero,
+          ).animate(curvedAnimation);
+
+          return FadeTransition(
+            opacity: curvedAnimation,
+            child: SlideTransition(
+              position: slideAnimation,
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _selectScreen(int index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: screens[selectedIndex],
+        bottom: false,
+        child: IndexedStack(
+          index: selectedIndex,
+          children: screens,
+        ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Inicio',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.fitness_center_outlined),
-            selectedIcon: Icon(Icons.fitness_center),
-            label: 'Rutina',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month),
-            label: 'Historial',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: 'Métricas',
-          ),
-        ],
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: AppBottomNavigation(
+          selectedIndex: selectedIndex,
+          onSelected: _selectScreen,
+        ),
       ),
     );
   }

@@ -5,10 +5,12 @@ import '../models/exercise.dart';
 
 class ExerciseCard extends StatelessWidget {
   final Exercise exercise;
+  final VoidCallback onAdd;
 
   const ExerciseCard({
     super.key,
     required this.exercise,
+    required this.onAdd,
   });
 
   @override
@@ -62,7 +64,7 @@ class ExerciseCard extends StatelessWidget {
           ),
 
           IconButton.filledTonal(
-            onPressed: () {},
+            onPressed: onAdd,
             icon: const Icon(Icons.add),
           ),
         ],
@@ -83,6 +85,10 @@ IconData _iconForMuscleGroup(String muscleGroup) {
       return Icons.fitness_center;
     case 'hombros':
       return Icons.accessibility_new;
+    case 'abdomen':
+      return Icons.self_improvement;
+    case 'cardio':
+      return Icons.directions_run;
     default:
       return Icons.fitness_center;
   }
